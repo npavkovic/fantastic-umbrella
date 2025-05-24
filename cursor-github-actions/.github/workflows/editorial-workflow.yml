@@ -1,0 +1,50 @@
+name: Editorial Workflow
+
+on:
+  push:
+    paths:
+      - 'content/research/**'
+      - 'content/blog/**'
+  pull_request:
+    paths:
+      - 'content/research/**'
+      - 'content/blog/**'
+
+jobs:
+  process-content:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd cursor-github-actions
+          npm install
+
+      - name: Process Research Stage
+        if: contains(github.event.head_commit.modified, 'content/research/') || contains(github.event.head_commit.added, 'content/research/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: |
+          cd cursor-github-actions
+          node dist/actions/research-action.js
+
+      - name: Process Draft Stage
+        if: contains(github.event.head_commit.modified, 'content/blog/') || contains(github.event.head_commit.added, 'content/blog/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+        run: |
+          cd cursor-github-actions
+          node dist/actions/draft-action.js 

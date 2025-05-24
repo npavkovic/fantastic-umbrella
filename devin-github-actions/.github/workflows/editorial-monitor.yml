@@ -1,0 +1,60 @@
+name: Editorial Workflow Monitor
+
+on:
+  # Run on a schedule to check for content that needs processing
+  schedule:
+    - cron: '*/15 * * * *'  # Run every 15 minutes
+  
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  monitor-content:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          cd devin-github-actions/actions/monitor
+          npm ci
+      
+      - name: Check for content ready for research
+        id: check-research
+        uses: ./devin-github-actions/actions/monitor
+        with:
+          workflow-type: 'research'
+          notion-api-key: ${{ secrets.NOTION_API_KEY }}
+          notion-blog-posts-id: ${{ secrets.NOTION_BLOG_POSTS_ID }}
+          notion-drafts-id: ${{ secrets.NOTION_DRAFTS_ID }}
+      
+      - name: Trigger research workflow if needed
+        if: ${{ steps.check-research.outputs.has-content == 'true' }}
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: research-trigger
+      
+      - name: Check for content ready for draft writing
+        id: check-draft
+        uses: ./devin-github-actions/actions/monitor
+        with:
+          workflow-type: 'draft-writing'
+          notion-api-key: ${{ secrets.NOTION_API_KEY }}
+          notion-blog-posts-id: ${{ secrets.NOTION_BLOG_POSTS_ID }}
+          notion-drafts-id: ${{ secrets.NOTION_DRAFTS_ID }}
+      
+      - name: Trigger draft writing workflow if needed
+        if: ${{ steps.check-draft.outputs.has-content == 'true' }}
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: draft-trigger

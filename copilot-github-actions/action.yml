@@ -1,0 +1,79 @@
+name: 'Editorial Workflow Action'
+description: 'Automates blog content research and draft writing using AI'
+author: 'GitHub Copilot'
+
+branding:
+  icon: 'edit-3'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+  perplexity-api-key:
+    description: 'Perplexity AI API key for research'
+    required: false
+  claude-api-key:
+    description: 'Claude AI API key for content generation'
+    required: false
+  github-owner:
+    description: 'GitHub repository owner'
+    required: true
+    default: ${{ github.repository_owner }}
+  github-repo:
+    description: 'GitHub repository name'
+    required: true
+    default: ${{ github.event.repository.name }}
+  github-branch:
+    description: 'Target branch for operations'
+    required: false
+    default: 'main'
+  content-dir-research:
+    description: 'Directory containing research files'
+    required: false
+    default: 'content/research'
+  content-dir-blog:
+    description: 'Directory for blog post outputs'
+    required: false
+    default: 'content/blog'
+  perplexity-model:
+    description: 'Perplexity model to use'
+    required: false
+    default: 'sonar-deep-research'
+  perplexity-temperature:
+    description: 'Temperature for Perplexity API'
+    required: false
+    default: '0.2'
+  perplexity-max-tokens:
+    description: 'Max tokens for Perplexity API'
+    required: false
+    default: '7000'
+  perplexity-search-domains:
+    description: 'Comma-separated list of domains to exclude from search'
+    required: false
+    default: '-reddit.com,-pinterest.com,-quora.com,-medium.com,-wikipedia.org'
+  claude-model:
+    description: 'Claude model to use'
+    required: false
+    default: 'claude-3-sonnet-20240229'
+  claude-temperature:
+    description: 'Temperature for Claude API'
+    required: false
+    default: '0.7'
+  claude-max-tokens:
+    description: 'Max tokens for Claude API'
+    required: false
+    default: '4000'
+
+outputs:
+  research-files-processed:
+    description: 'Number of research files processed'
+  draft-files-created:
+    description: 'Number of draft files created'
+  errors-encountered:
+    description: 'Number of errors encountered'
+
+runs:
+  using: 'node20'
+  main: 'lib/index.js'

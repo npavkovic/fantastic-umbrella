@@ -1,0 +1,20 @@
+name: 'Draft Writing Workflow Action'
+description: 'Processes research briefs and generates blog drafts using Claude AI'
+
+inputs:
+  notion-api-key:
+    description: 'Notion API Key'
+    required: true
+  notion-blog-posts-id:
+    description: 'Notion Blog Posts Database ID'
+    required: true
+  notion-drafts-id:
+    description: 'Notion Drafts Database ID'
+    required: true
+  anthropic-api-key:
+    description: 'Anthropic API Key for Claude'
+    required: true
+
+runs:
+  using: 'node16'
+  main: 'index.js'

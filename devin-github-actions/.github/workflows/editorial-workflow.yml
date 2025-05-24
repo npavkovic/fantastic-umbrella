@@ -1,0 +1,60 @@
+name: Editorial Workflow
+
+on:
+  # Manual trigger with workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      workflow_type:
+        description: 'Workflow type to run'
+        required: true
+        default: 'research'
+        type: choice
+        options:
+          - research
+          - draft-writing
+      
+  # Event-based triggers
+  repository_dispatch:
+    types:
+      - research-trigger
+      - draft-trigger
+
+jobs:
+  process-content:
+    runs-on: ubuntu-latest
+    
+    # Use matrix strategy to handle different workflow types
+    strategy:
+      matrix:
+        workflow_type: 
+          - ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.workflow_type || (github.event.action == 'research-trigger' && 'research' || 'draft-writing') }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Conditional step for research workflow
+      - name: Run Research Workflow
+        if: ${{ matrix.workflow_type == 'research' }}
+        uses: ./devin-github-actions/actions/research
+        with:
+          notion-api-key: ${{ secrets.NOTION_API_KEY }}
+          notion-blog-posts-id: ${{ secrets.NOTION_BLOG_POSTS_ID }}
+          notion-drafts-id: ${{ secrets.NOTION_DRAFTS_ID }}
+          perplexity-api-key: ${{ secrets.PERPLEXITY_API_KEY }}
+      
+      # Conditional step for draft writing workflow
+      - name: Run Draft Writing Workflow
+        if: ${{ matrix.workflow_type == 'draft-writing' }}
+        uses: ./devin-github-actions/actions/draft-writing
+        with:
+          notion-api-key: ${{ secrets.NOTION_API_KEY }}
+          notion-blog-posts-id: ${{ secrets.NOTION_BLOG_POSTS_ID }}
+          notion-drafts-id: ${{ secrets.NOTION_DRAFTS_ID }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

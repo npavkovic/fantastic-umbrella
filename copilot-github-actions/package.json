@@ -1,0 +1,37 @@
+{
+  "name": "copilot-github-actions-editorial-workflow",
+  "version": "1.0.0",
+  "description": "Event-driven GitHub Actions workflow for automated blog content research and drafting",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build src/index.ts -o dist --source-map --license licenses.txt"
+  },
+  "keywords": [
+    "github-action",
+    "editorial-workflow",
+    "automation",
+    "content-generation",
+    "typescript"
+  ],
+  "author": "GitHub Copilot",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@octokit/rest": "^20.0.2",
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.0",
+    "slugify": "^1.6.6"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "@vercel/ncc": "^0.38.1",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  }
+}

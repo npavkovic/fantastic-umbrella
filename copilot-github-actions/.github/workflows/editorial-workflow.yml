@@ -1,0 +1,84 @@
+name: Editorial Workflow
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'content/research/**/*.md'
+      - 'content/blog/**/*.md'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'content/research/**/*.md'
+      - 'content/blog/**/*.md'
+  workflow_dispatch: # Allow manual triggering
+    inputs:
+      force_scan:
+        description: 'Force scan all content directories'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  editorial-workflow:
+    runs-on: ubuntu-latest
+    name: Process Editorial Content
+    
+    permissions:
+      contents: write
+      pull-requests: read
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # Get full history for better diff detection
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'copilot-github-actions/package.json'
+          
+      - name: Install dependencies
+        run: |
+          cd copilot-github-actions
+          npm ci
+          
+      - name: Build action
+        run: |
+          cd copilot-github-actions
+          npm run build
+          
+      - name: Run Editorial Workflow
+        uses: ./copilot-github-actions
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          perplexity-api-key: ${{ secrets.PERPLEXITY_API_KEY }}
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          github-owner: ${{ github.repository_owner }}
+          github-repo: ${{ github.event.repository.name }}
+          github-branch: ${{ github.ref_name }}
+          content-dir-research: 'content/research'
+          content-dir-blog: 'content/blog'
+          perplexity-model: 'sonar-deep-research'
+          perplexity-temperature: '0.2'
+          perplexity-max-tokens: '7000'
+          claude-model: 'claude-3-sonnet-20240229'
+          claude-temperature: '0.7'
+          claude-max-tokens: '4000'
+          
+      - name: Commit changes
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Editorial Workflow Action"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated editorial workflow updates [skip ci]"
+            git push
+          fi

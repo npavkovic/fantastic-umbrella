@@ -1,0 +1,73 @@
+# This is an example workflow file.
+# Users would typically copy this to their repository's .github/workflows/ directory
+# and customize it as needed.
+
+name: 'Blog Content Processing Pipeline'
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+      - 'feature/**' # Example: also run on feature branches
+    paths:
+      - 'posts/**.md'       # Adjust to your content directory and file extensions
+      - 'posts/**.markdown'
+      - 'content/**.md'
+      - 'content/**.markdown'
+      # Add other paths if your content files are located elsewhere or have different extensions
+  workflow_dispatch: # Allows manual triggering from the Actions tab
+
+jobs:
+  process_content:
+    name: Process Blog Content
+    runs-on: ubuntu-latest
+
+    # Grant write permissions to the GITHUB_TOKEN for this job
+    # This is necessary for the action to commit changes back to the repository.
+    permissions:
+      contents: write # Required to push changes
+      pull-requests: write # Optional: if you want the action to be able to create PRs in the future
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history to enable proper git operations if needed,
+          # though for simple commits and pushes, depth 1 might be fine.
+          # However, our script configures git user, so a proper checkout is good.
+          fetch-depth: 0 
+          # Using a PAT if GITHUB_TOKEN permissions are insufficient for cross-repo or advanced scenarios.
+          # For same-repo commits, GITHUB_TOKEN with `permissions: contents: write` is usually fine.
+          # token: ${{ secrets.YOUR_PAT_IF_NEEDED }} 
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Must match the 'using' in action.yml
+
+      # If the action is in the same repository, you can use a relative path.
+      # If it's a published action, use: user/repo@version
+      # The `id` allows referencing action outputs if it had any.
+      - name: Run Blog Content Workflow Action
+        id: blog_workflow
+        uses: ./Jules-github-actions # Assumes this workflow file is in the root of the repo using the action
+                                     # and Jules-github-actions is a directory in that root.
+                                     # If Jules-github-actions is its own repo, this would be:
+                                     # uses: YOUR_ORG/Jules-github-actions@main (or @v1)
+                                     # For testing locally before bundling/publishing, this relative path is fine
+                                     # IF the action.yml points to dist/index.js and you've run `npm run build`.
+                                     # Since we are developing, we might need to run the JS directly or build first.
+                                     # For simplicity of this step, we assume the action can be "used" directly.
+                                     # In a real scenario, one would typically build the action first.
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY_SECRET }} # User needs to create this secret
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY_SECRET }}       # User needs to create this secret
+          CONTENT_DIR: 'posts' # Example: content is in a 'posts' directory
+          GIT_USER_NAME: 'Blog Workflow Bot'
+          GIT_USER_EMAIL: 'bot@example.com' # Or use the default from action.yml
+
+      # Example of how to react to the action's outcome if it set outputs
+      # - name: Check action output (if any)
+      #   if: steps.blog_workflow.outputs.some_output_was_set 
+      #   run: echo "The action did something: ${{ steps.blog_workflow.outputs.some_output }}"

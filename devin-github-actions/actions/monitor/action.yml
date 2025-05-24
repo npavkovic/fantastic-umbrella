@@ -1,0 +1,25 @@
+name: 'Editorial Workflow Monitor Action'
+description: 'Checks for content that needs processing in the editorial workflow'
+
+inputs:
+  workflow-type:
+    description: 'Type of workflow to check (research or draft-writing)'
+    required: true
+  notion-api-key:
+    description: 'Notion API Key'
+    required: true
+  notion-blog-posts-id:
+    description: 'Notion Blog Posts Database ID'
+    required: true
+  notion-drafts-id:
+    description: 'Notion Drafts Database ID'
+    required: true
+
+outputs:
+  has-content:
+    description: 'Whether there is content ready for processing'
+    value: ${{ steps.check-content.outputs.has-content }}
+
+runs:
+  using: 'node16'
+  main: 'index.js'
